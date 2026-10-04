@@ -1,4 +1,4 @@
-const C='jg-v362';
+const C='jg-v365';
 const APP_SHELL=['./','./index.html','./logo.png','./manifest.json'];
 
 self.addEventListener('install',e=>{

@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080808"><link rel="manifest" href="manifest.json"><title>JG Mobile Mechanic Cloud</title><style>
 :root{--gold:#f5b800;--bg:#080808;--card:#151515;--line:#4a3900;--text:#f6f6f6;--muted:#b8b8b8;--ok:#62d26f;--bad:#ff6868}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(#050505,#111);color:var(--text);min-height:100vh}header{position:sticky;top:0;background:#090909f2;border-bottom:2px solid var(--gold);padding:9px 16px;display:flex;align-items:center;gap:12px;z-index:5}header img{width:50px;height:50px;border-radius:50%;object-fit:cover}h1{font-size:20px;margin:0;color:var(--gold)}small,.muted{color:var(--muted)}main{max-width:1100px;margin:auto;padding:18px}.hero{display:flex;gap:18px;align-items:center;background:radial-gradient(circle at 10% 20%,#332500,#111 50%);padding:18px;border:1px solid var(--line);border-radius:18px}.hero img{width:110px;height:110px;border-radius:50%;object-fit:cover}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0}.tile,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}.tile{cursor:pointer}.tile:hover{border-color:var(--gold)}.tile b{color:var(--gold);font-size:18px}button{background:var(--gold);color:#111;border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#282828;color:#fff;border:1px solid #555}button.danger{background:#6b1f1f;color:#fff}.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}input,textarea,select{width:100%;padding:10px;margin:6px 0 10px;background:#090909;color:#fff;border:1px solid #555;border-radius:8px}label{font-size:13px;color:#ddd}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.hidden{display:none!important}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #333;font-size:14px}th{color:var(--gold)}.status{padding:8px 10px;border-radius:8px;background:#222;margin:10px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}#loginView{max-width:480px;margin:6vh auto}.login-logo{width:190px;height:190px;display:block;margin:0 auto 12px;border-radius:50%;object-fit:cover}.tabs{display:flex;gap:8px;margin-bottom:12px}.tabs button{flex:1}.userline{font-size:12px;color:#ddd}.customer-card{background:#111;border:1px solid #333;border-radius:10px;padding:12px;margin:10px 0}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.actions button{padding:7px 9px}.reminder{border-left:4px solid var(--gold)}.print-only{display:none}@media print{header,.grid,.hero,.no-print{display:none!important}main{max-width:none;padding:0}.panel{border:0}.print-only{display:block}body{background:#fff;color:#000}.panel{background:#fff;color:#000}small,.muted{color:#444}}@media(max-width:650px){.row{grid-template-columns:1fr}.hero img{width:80px;height:80px}.hero{align-items:flex-start}table{display:block;overflow:auto}header .userline{display:none}}
 </style></head><body>
-<header><img src="logo.png"><div><h1>JG MOBILE MECHANIC</h1><small>Cloud Edition V3.6.2</small></div><div class="top-actions"><span id="userLine" class="userline"></span><button id="logoutBtn" class="secondary hidden" onclick="logout()">Log out</button></div></header>
+<header><img src="logo.png"><div><h1>JG MOBILE MECHANIC</h1><small>Cloud Edition V3.6.5</small></div><div class="top-actions"><span id="userLine" class="userline"></span><button id="logoutBtn" class="secondary hidden" onclick="logout()">Log out</button></div></header>
 <main>
 <section id="loginView" class="panel"><img src="logo.png" class="login-logo"><h2 style="text-align:center;color:var(--gold)">Welcome to JG Mobile Mechanic</h2><p class="muted" style="text-align:center">Sign in to access your secure workshop or customer portal.</p><div class="tabs"><button onclick="setLoginMode('mechanic')">🔧 Mechanic Login</button><button class="secondary" onclick="setLoginMode('customer')">👤 Customer Login</button></div><label>Email</label><input id="loginEmail" type="email" autocomplete="username"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"><button style="width:100%" onclick="login()">Sign In</button><button class="secondary" style="width:100%;margin-top:8px" onclick="showForgotPassword()">Forgot password?</button><button id="signupBtn" class="secondary" style="width:100%;margin-top:8px" onclick="showCustomerRegistration()">Customer: Create Account / Request Repair</button><div id="loginMsg" class="status muted">Cloud connection ready.</div></section>
 <section id="forgotView" class="panel hidden" style="max-width:480px;margin:6vh auto"><img src="logo.png" class="login-logo"><h2 style="text-align:center;color:var(--gold)">Reset Password</h2><p class="muted">Enter your customer email address and we will send you a secure password recovery link.</p><label>Email</label><input id="forgotEmail" type="email" autocomplete="email"><button style="width:100%" onclick="sendPasswordReset()">Send Reset Link</button><button class="secondary" style="width:100%;margin-top:8px" onclick="backFromForgot()">Back to Login</button><div id="forgotMsg" class="status muted">The recovery link will return you to the JG Mobile Mechanic app.</div></section>
@@ -22,26 +22,18 @@
 </div></main>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getMessaging, register, onRegistered, onMessage } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
 const cfg={apiKey:'AIzaSyAzK1oA4VgeNLx84eoNpHjUVIAccPJxU90',authDomain:'jg-mobile-mechanic.firebaseapp.com',projectId:'jg-mobile-mechanic',storageBucket:'jg-mobile-mechanic.firebasestorage.app',messagingSenderId:'707409362105',appId:'1:707409362105:web:05e00c0075ff99b0186f68'};
 const vapid='BN4qxb5VUVxovF-eyc3l56pYp0W1-dLnbnY3iVifznCLaw1auDloDuRZq_Cgpw0EIWpibQJ-pdWXAdRU6peEXH0';
 const app=initializeApp(cfg);
 const messaging=getMessaging(app);
-let pendingResolve=null, pendingReject=null;
-onRegistered(messaging,(installationId)=>{
-  window.dispatchEvent(new CustomEvent('jg-fcm-registered',{detail:{installationId}}));
-  if(pendingResolve){pendingResolve(installationId);pendingResolve=null;pendingReject=null;}
-});
 onMessage(messaging,(payload)=>{
   const n=payload.notification||{}, title=n.title||'JG Mobile Mechanic', body=n.body||payload.data?.body||'You have a new update.';
   if(Notification.permission==='granted') new Notification(title,{body,icon:'logo.png'});
 });
-window.jgFcmRegister=()=>new Promise(async(resolve,reject)=>{
-  pendingResolve=resolve; pendingReject=reject;
-  const timer=setTimeout(()=>{if(pendingReject){pendingReject(new Error('Firebase registration timed out.'));pendingResolve=null;pendingReject=null;}},15000);
-  try{await register(messaging,{vapidKey:vapid});}
-  catch(e){clearTimeout(timer);pendingResolve=null;pendingReject=null;reject(e);}
-});
+window.jgFcmGetToken=async()=>{
+  return await getToken(messaging,{vapidKey:vapid});
+};
 window.dispatchEvent(new Event('jg-fcm-ready'));
 </script>
 <script>
@@ -109,16 +101,15 @@ async function enableNotifications(){
   try{
     let perm=await Notification.requestPermission();
     if(perm!=='granted'){alert('Notifications were not enabled. You can allow them later in your browser/site settings.');return}
-    await navigator.serviceWorker.register('firebase-messaging-sw.js');
-    if(!window.jgFcmRegister) await new Promise((resolve,reject)=>{let t=setTimeout(()=>reject(new Error('Firebase messaging did not load.')),10000);window.addEventListener('jg-fcm-ready',()=>{clearTimeout(t);resolve()},{once:true})});
-    let installationId=await window.jgFcmRegister();
-    if(!installationId)throw new Error('No Firebase Installation ID was returned.');
+    if(!window.jgFcmGetToken) await new Promise((resolve,reject)=>{let t=setTimeout(()=>reject(new Error('Firebase messaging did not load.')),10000);window.addEventListener('jg-fcm-ready',()=>{clearTimeout(t);resolve()},{once:true})});
+    let fcmToken=await window.jgFcmGetToken();
+    if(!fcmToken)throw new Error('No FCM registration token was returned.');
     let user=await api('/auth/v1/user');
-    await api('/rest/v1/push_tokens?on_conflict=token',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{user_id:user.id,token:installationId,platform:'web-fid',role:role||'customer',updated_at:new Date().toISOString()}});
+    await api('/rest/v1/push_tokens?on_conflict=token',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{user_id:user.id,token:fcmToken,platform:'web-token',role:role||'customer',updated_at:new Date().toISOString()}});
     localStorage.setItem('jg_push_enabled','1');updateNotificationLabels();alert('Notifications enabled ✓');
   }catch(e){alert('Could not enable notifications: '+e.message)}
 }
 function updateNotificationLabels(){let on=localStorage.getItem('jg_push_enabled')==='1'&&Notification.permission==='granted';['notifyTextM','notifyTextC'].forEach(id=>{let e=document.getElementById(id);if(e)e.textContent=on?'Notifications enabled ✓':'Enable phone/browser notifications'})}
-let deferred;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;installBtn.classList.remove('hidden')});document.getElementById('installBtn').onclick=async()=>{if(deferred){deferred.prompt();deferred=null;installBtn.classList.add('hidden')}};if(location.protocol!=='file:'&&'serviceWorker'in navigator)navigator.serviceWorker.register('firebase-messaging-sw.js').catch(()=>{});
+let deferred;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;installBtn.classList.remove('hidden')});document.getElementById('installBtn').onclick=async()=>{if(deferred){deferred.prompt();deferred=null;installBtn.classList.add('hidden')}};
 (async()=>{let recovery=handleAuthCallback();if(recovery)return;if(token){try{await enterApp()}catch(e){logout();document.getElementById('loginMsg').innerHTML='<span class="bad">Please sign in again.</span>'}}})();
 </script></body></html>
